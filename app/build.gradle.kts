@@ -12,8 +12,8 @@ android {
         applicationId = "app.recall"
         minSdk = 29
         targetSdk = 36
-        versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 1
-        versionName = (project.findProperty("versionName") as? String) ?: "0.1.0"
+        versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 2
+        versionName = (project.findProperty("versionName") as? String) ?: "0.1.1"
 
         ndk {
             // Phones only. llama.cpp is built with every ARM CPU variant and the right one
