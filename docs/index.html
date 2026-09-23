@@ -89,6 +89,16 @@ code,.mono{font-family:"Plex Mono",ui-monospace,monospace}
 .rail{display:grid;grid-auto-flow:column;grid-auto-columns:clamp(220px,24vw,270px);gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px max(24px,calc((100vw - var(--wrap))/2 + 24px)) 12px;scroll-padding:0 max(24px,calc((100vw - var(--wrap))/2 + 24px))}
 .rail::-webkit-scrollbar{display:none}
 .rail figure{scroll-snap-align:start}
+/* Pinned mode (JS adds .pin when the browser supports scroll-driven animations):
+   the section stays on screen and the screenshots slide left as you scroll down. */
+@supports (animation-timeline:view()){
+  .rail-sec.pin{padding:0;view-timeline:--screens block}
+  .rail-sec.pin .pin-inner{position:sticky;top:64px;height:calc(100dvh - 64px);display:flex;flex-direction:column;justify-content:center;overflow:clip}
+  .rail-sec.pin .rail{width:max-content;overflow:visible;scroll-snap-type:none;grid-auto-columns:min(270px,64vw,calc((100dvh - 300px) * .469));animation:pan linear both;animation-timeline:--screens;animation-range:contain 0% contain 100%}
+  .rail-sec.pin .rail-btns{display:none}
+  .rail-sec.pin .pin-inner>.wrap{width:100%}
+  @keyframes pan{to{transform:translateX(calc(-100% + 100vw))}}
+}
 .shot{height:auto;border-radius:var(--r-shot);border:1px solid var(--line);background:var(--bg-2);aspect-ratio:540/1151;width:100%;object-fit:cover;box-shadow:0 30px 60px -30px rgba(4,6,14,.9)}
 .rail figcaption{margin-top:14px;font-size:15px;color:var(--muted)}
 .rail figcaption b{display:block;color:var(--text);font-weight:600;margin-bottom:2px}
@@ -96,20 +106,21 @@ code,.mono{font-family:"Plex Mono",ui-monospace,monospace}
 /* Bento */
 .bento-sec{padding:0 0 128px}
 .bento-sec h2{margin-bottom:40px}
-.bento{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:minmax(200px,auto);gap:16px}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
 .cell{border-radius:var(--r-panel);border:1px solid var(--line);background:var(--panel);padding:32px;display:flex;flex-direction:column;gap:12px;overflow:hidden;position:relative}
 .cell p{font-size:16px}
 .cell i.lead{font-size:28px;color:var(--accent);margin-bottom:8px}
-.c-wait{grid-column:span 4;grid-row:span 2;display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:40px 0 0 40px;background:linear-gradient(160deg,#1A2033 0%,var(--panel) 60%)}
-.c-wait .txt{display:flex;flex-direction:column;gap:14px;padding-bottom:40px}
+.c-wait{grid-column:span 7;display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:40px;align-items:start;background:linear-gradient(160deg,#1A2033 0%,var(--panel) 60%)}
+.c-wait .txt{display:flex;flex-direction:column;gap:14px}
 .c-wait h3{font-size:30px}
 .c-wait .quote{font:400 15px/1.5 "Plex Mono",monospace;color:var(--text);border-left:2px solid #FF6B6B;padding-left:14px;margin-top:8px}
-.c-wait img{align-self:end;border-radius:var(--r-shot) 0 0 0;border:1px solid var(--line);border-bottom:0;border-right:0;width:100%;height:100%;object-fit:cover;object-position:top}
-.c-digest{grid-column:span 2}
-.c-money{grid-column:span 2;grid-row:span 2;padding:32px 32px 0;background:linear-gradient(180deg,var(--panel) 0%,#12261F 100%)}
-.c-money img{margin-top:24px;border-radius:var(--r-shot) var(--r-shot) 0 0;border:1px solid var(--line);border-bottom:0;height:280px;width:100%;object-fit:cover;object-position:top}
-.c-ask{grid-column:span 2}
-.c-learn{grid-column:span 2}
+.c-wait img,.c-money img{width:100%;max-width:300px;height:auto;border-radius:var(--r-shot);border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(4,6,14,.9)}
+.c-wait img{justify-self:end}
+.c-digest{grid-column:span 3}
+.c-money{grid-column:span 5;padding:40px;background:linear-gradient(180deg,var(--panel) 0%,#12261F 100%)}
+.c-money img{margin:16px auto 0}
+.c-ask{grid-column:span 5}
+.c-learn{grid-column:span 4}
 .c-ask .mono{font-size:14px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
 .time{font:700 44px/1 "Bricolage",sans-serif;letter-spacing:-.03em;color:var(--text);margin-bottom:auto;padding-bottom:20px}
 
@@ -178,9 +189,8 @@ footer a:hover{color:var(--text)}
 /* Tablet */
 @media (max-width:1023px){
   .bento{grid-template-columns:repeat(2,1fr)}
-  .c-wait{grid-column:span 2;grid-row:auto}
-  .c-money{grid-column:span 1;grid-row:span 2}
-  .c-digest,.c-ask,.c-learn{grid-column:span 1}
+  .c-wait,.c-money,.c-learn{grid-column:span 2}
+  .c-digest,.c-ask{grid-column:span 1}
   .flow{grid-template-columns:repeat(2,1fr);row-gap:48px}
   .flow::before{display:none}
 }
@@ -197,11 +207,12 @@ footer a:hover{color:var(--text)}
   .rail-btns{display:none}
   .rail{padding:4px 16px 12px;scroll-padding:0 16px;grid-auto-columns:64vw}
   .bento{grid-template-columns:1fr}
-  .c-wait,.c-money,.c-digest,.c-ask,.c-learn{grid-column:auto;grid-row:auto}
-  .c-wait{grid-template-columns:1fr;padding:28px 28px 0}
-  .c-wait img{height:300px;border-radius:var(--r-shot) var(--r-shot) 0 0;border-right:1px solid var(--line)}
+  .c-wait,.c-money,.c-digest,.c-ask,.c-learn{grid-column:auto}
+  .c-wait{grid-template-columns:1fr;padding:28px}
+  .c-wait img{justify-self:center;max-width:280px}
+  .c-money img{max-width:280px}
   .cell{padding:28px}
-  .c-money{padding:28px 28px 0}
+  .c-money{padding:28px}
   .privacy{padding:80px 0}
   .privacy .wrap,.contrib .wrap{grid-template-columns:1fr;gap:40px}
   .how{padding:88px 0}
@@ -248,7 +259,8 @@ footer a:hover{color:var(--text)}
     </div>
   </section>
 
-  <section class="rail-sec" aria-labelledby="screens-h">
+  <section class="rail-sec" id="screens" aria-labelledby="screens-h">
+   <div class="pin-inner">
     <div class="wrap rail-head">
       <h2 id="screens-h">A look inside.</h2>
       <div class="rail-btns">
@@ -266,6 +278,7 @@ footer a:hover{color:var(--text)}
       <figure><img class="shot" src="screens/money-cats.png" alt="Payment list filtered by spent, received and savings" loading="lazy" width="540" height="1151"><figcaption><b>Payments</b>Every one, straight from your SMS.</figcaption></figure>
       <figure><img class="shot" src="screens/you.png" alt="What Recall knows: facts it learned, each one removable" loading="lazy" width="540" height="1151"><figcaption><b>What it knows</b>Read it, delete any of it.</figcaption></figure>
     </div>
+   </div>
   </section>
 
   <section class="bento-sec" aria-labelledby="does-h">
@@ -278,17 +291,17 @@ footer a:hover{color:var(--text)}
             <p>A request stays on your list until you reply or tap Done. "Quick", "urgent" and deadlines move it up.</p>
             <p class="quote">hey can u approve this pr quick? blocking the release</p>
           </div>
-          <img src="screens/waiting.png" alt="" loading="lazy">
+          <img src="screens/waiting.png" alt="" loading="lazy" width="540" height="1151">
         </article>
-        <article class="cell c-digest rv" style="--i:1">
+        <article class="cell c-money rv" style="--i:1">
+          <h3>Money, from your SMS</h3>
+          <p>Bank, UPI and card alerts become spending, received and invested. Moving money between your own accounts isn't spending.</p>
+          <img src="screens/money.png" alt="" loading="lazy" width="540" height="1151">
+        </article>
+        <article class="cell c-digest rv">
           <div class="time">9:30 PM</div>
           <h3>One digest a night</h3>
           <p>What's urgent, who's waiting, what you spent.</p>
-        </article>
-        <article class="cell c-money rv" style="--i:2">
-          <h3>Money, from your SMS</h3>
-          <p>Bank, UPI and card alerts become spending, received and invested. Moving money between your own accounts isn't spending.</p>
-          <img src="screens/money.png" alt="" loading="lazy">
         </article>
         <article class="cell c-ask rv">
           <i class="ph ph-chat-circle-dots lead" aria-hidden="true"></i>
@@ -403,8 +416,20 @@ footer a:hover{color:var(--text)}
   }, {rootMargin:"0px 0px -8% 0px"});
   document.querySelectorAll(".rv").forEach(function(el){ io.observe(el); });
 
-  // Screens rail arrows.
+  // Screens: pin and pan with the page scroll where supported, else a swipeable rail.
   var rail = document.getElementById("rail");
+  var railSec = document.getElementById("screens");
+  if (!reduce && window.CSS && CSS.supports("animation-timeline: view()")){
+    railSec.classList.add("pin");
+    // Scroll distance while pinned = how far the screenshots have to travel sideways.
+    var fit = function(){
+      var travel = Math.max(0, rail.scrollWidth - document.documentElement.clientWidth);
+      railSec.style.height = (window.innerHeight - 64 + travel) + "px";
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    if (document.fonts) document.fonts.ready.then(fit);
+  }
   document.querySelectorAll(".rail-btns button").forEach(function(b){
     b.addEventListener("click", function(){
       rail.scrollBy({left: +b.dataset.dir * rail.clientWidth * 0.8, behavior: reduce ? "auto" : "smooth"});
