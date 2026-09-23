@@ -27,17 +27,20 @@ object Triage {
     private val TRIAGE_SYSTEM = """
         You read messages sent to the user and decide which ones need the user.
         Messages can be in English, Tamil, Hindi, Kannada, Telugu or mixed (Tanglish, Hinglish).
-        Each numbered item shows the latest message and a few earlier lines of that conversation.
+        Each numbered item shows the latest message and a few earlier lines of that conversation (for email, that thread).
         Lines starting "You:" were written by the user; if the user already answered, it doesn't need them.
 
         NEED = the sender wants the user to do, answer, decide, send, pay, call or approve something.
-        FYI = news, thanks, jokes, forwards, greetings, automated alerts, or already answered.
+        Items marked (alert) are automated. They are NEED when they report a failure, errors, an outage or a
+        suspension, because the user has to check it. Routine alerts (started, finished, updated) are FYI.
+        FYI = news, thanks, jokes, forwards, greetings, routine alerts (started, finished, updated), or already answered.
 
         Urgency: 0 whenever, 1 soon, 2 today, 3 right now (emergency, blocking, repeated pings).
 
         Reply with exactly one line per item and nothing else:
         <number> | NEED or FYI | <urgency 0-3> | <deadline in 1-3 words, or -> | <what they want, max 8 words, in English>
         Example: 2 | NEED | 3 | before release | Approve PR #212
+        Example: 3 | NEED | 2 | - | Check the failed ETL run
     """.trimIndent()
 
     private val TRIAGE_LINE = Regex("""^\s*(\d+)\s*[|:.)-]\s*(NEED|FYI)\s*\|\s*([0-3])\s*\|\s*([^|]*)\|\s*(.*)$""", RegexOption.IGNORE_CASE)
@@ -72,8 +75,9 @@ object Triage {
     // ------------------------------------------------------------------ requests
 
     private fun fromPerson(m: Message): Boolean {
+        // Alert mails: routine ones ("build finished") skip the model, problems get a look.
+        if (m.kind == Kind.EMAIL && SenderHeuristics.isSystemMail(m.text)) return SenderHeuristics.isProblem(m.text)
         if (SenderHeuristics.isAutomated(m.sender, m.text) || SenderHeuristics.isPromo(m.text)) return false
-        if (m.kind == Kind.EMAIL && SenderHeuristics.isSystemMail(m.text)) return false
         return !m.isGroup || m.pkg in AppKinds.MENTION_ONLY || Understand.mentionsUser(m.text)
     }
 
@@ -92,7 +96,8 @@ object Triage {
             latest.forEachIndexed { i, m ->
                 val ctx = Repo.messagesForConv(m.convKey, now - 2 * Repo.DAY).takeLast(6)
                 val title = if (m.isGroup) "${m.convTitle} (group)" else (m.convTitle ?: m.sender ?: m.app)
-                appendLine("${i + 1}. ${m.app} · $title")
+                val alert = m.kind == Kind.EMAIL && SenderHeuristics.isSystemMail(m.text)
+                appendLine("${i + 1}. ${m.app} · $title${if (alert) " (alert)" else ""}")
                 ctx.forEach { c ->
                     val who = if (c.isSelf) "You" else (c.sender ?: title)
                     appendLine("   $who: ${c.text.replace('\n', ' ').take(160)}")

@@ -6,6 +6,7 @@ import app.recall.data.Db
 import app.recall.digest.DigestScheduler
 import app.recall.digest.Notifier
 import app.recall.status.Status
+import app.recall.data.Repo
 import app.recall.understand.MoneyParser
 import app.recall.understand.Understand
 import kotlinx.coroutines.launch
@@ -44,5 +45,15 @@ object App {
                 prefs.moneyParserVersion = MoneyParser.VERSION
             }
         }
+        if (prefs.emailRereadVersion < EMAIL_REREAD_VERSION) {
+            scope.launch {
+                Repo.splitEmailThreads(System.currentTimeMillis() - Repo.DAY)
+                prefs.emailRereadVersion = EMAIL_REREAD_VERSION
+                app.recall.learn.TriageWorker.runSoon(ctx)
+            }
+        }
     }
+
+    /** Bump when email understanding changes, so the last day of email is read again. */
+    private const val EMAIL_REREAD_VERSION = 2
 }

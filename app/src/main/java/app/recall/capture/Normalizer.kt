@@ -2,7 +2,9 @@ package app.recall.capture
 
 import android.app.Notification
 import android.content.Context
-import android.content.pm.PackageManager
+import android.graphics.Typeface
+import android.text.Spanned
+import android.text.style.StyleSpan
 import android.service.notification.StatusBarNotification
 import androidx.core.app.NotificationCompat
 import app.recall.data.Captured
@@ -29,19 +31,31 @@ object Normalizer {
     fun convKey(sbn: StatusBarNotification): String {
         val n = sbn.notification
         val extras = n.extras
-        val id = n.shortcutId
-            ?: extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString()
+        // Shortcut ids name a chat. Other apps (Gmail) can use one id for a whole account,
+        // which would merge every email into one conversation, so there the title (sender) wins.
+        val chat = n.category == Notification.CATEGORY_MESSAGE || extras.containsKey(Notification.EXTRA_MESSAGES)
+        if (!chat && (n.category == Notification.CATEGORY_EMAIL || AppKinds.isEmail(sbn.packageName))) {
+            val sender = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
+            val subject = (extras.getCharSequence(Notification.EXTRA_TEXT) ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT))?.toString()
+            if (sender != null && !subject.isNullOrBlank()) return MailThread.key(sbn.packageName, sender, subject)
+        }
+        val id = (if (chat) n.shortcutId ?: extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString() else null)
             ?: extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
             ?: sbn.tag
             ?: sbn.id.toString()
         return "${sbn.packageName}|$id"
     }
 
-    fun normalize(context: Context, sbn: StatusBarNotification): List<Captured> {
+    /**
+     * [hasChildren]: for a group summary, whether the group's own notifications are showing.
+     * If they aren't (Gmail stops posting one per email after a few), the summary's lines are
+     * the only copy of those messages.
+     */
+    fun normalize(context: Context, sbn: StatusBarNotification, hasChildren: Boolean = true): List<Captured> {
         val pkg = sbn.packageName
         if (pkg == context.packageName) return emptyList()
         val n = sbn.notification ?: return emptyList()
-        if (n.flags and Notification.FLAG_GROUP_SUMMARY != 0) return emptyList()
+        if (n.flags and Notification.FLAG_GROUP_SUMMARY != 0) return summaryLines(context, sbn, hasChildren)
 
         val extras = n.extras
         // Progress bars (downloads, uploads) update constantly and carry nothing to remember.
@@ -112,6 +126,49 @@ object Normalizer {
                 sbnKey = sbn.key, ongoing = ongoing,
             ),
         )
+    }
+
+    /** One message per line of a bundled summary ("Sender  Subject"). */
+    private fun summaryLines(context: Context, sbn: StatusBarNotification, hasChildren: Boolean): List<Captured> {
+        val pkg = sbn.packageName
+        val n = sbn.notification
+        val extras = n.extras
+        val lines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)?.filter { !it.isNullOrBlank() }.orEmpty()
+        if (lines.isEmpty()) return emptyList()
+        // Apps repeat their messages in the summary in another format; only read the lines
+        // when nothing else carries them.
+        if (hasChildren) return emptyList()
+        val kind = kindOf(pkg, n.category, false)
+        if (AppKinds.isSms(pkg) && SmsReader.granted(context)) return emptyList()
+        val app = appLabel(context, pkg)
+        val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim()
+        val bucket = sbn.postTime / TWELVE_HOURS
+        return lines.mapNotNull { line ->
+            val (sender, text) = splitLine(line)
+            if (text.isEmpty() || REDACTED.containsMatchIn(text)) return@mapNotNull null
+            val who = sender ?: title
+            Captured(
+                hash = sha1("$pkg|line|$who|$text|$bucket"), pkg = pkg, app = app,
+                convKey = if (kind == Kind.EMAIL) MailThread.key(pkg, who, text) else "$pkg|${who ?: sbn.key}",
+                convTitle = who, sender = who, text = text, isSelf = false, isGroup = false,
+                kind = kind, category = n.category, at = sbn.postTime, sbnKey = sbn.key, ongoing = false,
+            )
+        }
+    }
+
+    /** Gmail puts the sender in bold at the start of each line; otherwise fall back to separators. */
+    private fun splitLine(line: CharSequence): Pair<String?, String> {
+        if (line is Spanned) {
+            val bold = line.getSpans(0, line.length, StyleSpan::class.java)
+                .firstOrNull { it.style and Typeface.BOLD != 0 && line.getSpanStart(it) == 0 }
+            if (bold != null) {
+                val end = line.getSpanEnd(bold)
+                val sender = line.subSequence(0, end).toString().trim()
+                val text = line.subSequence(end, line.length).toString().trim().trimStart(':', '-', '·', '|').trim()
+                if (sender.isNotEmpty() && text.isNotEmpty()) return sender to text
+            }
+        }
+        return SummaryLine.split(line.toString())
     }
 
     private val REDACTED = Regex("^Sensitive notification content hidden$", RegexOption.IGNORE_CASE)

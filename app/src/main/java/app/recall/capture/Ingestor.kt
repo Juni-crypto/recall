@@ -10,8 +10,8 @@ import app.recall.understand.Understand
 /** Stores each captured message and hands incoming ones to [Understand]. */
 object Ingestor {
 
-    fun onPosted(context: Context, sbn: StatusBarNotification) {
-        for (c in Normalizer.normalize(context, sbn)) handle(c)
+    fun onPosted(context: Context, sbn: StatusBarNotification, hasChildren: Boolean = true) {
+        for (c in Normalizer.normalize(context, sbn, hasChildren)) handle(c)
     }
 
     fun handle(c: Captured, trackRequests: Boolean = true) {

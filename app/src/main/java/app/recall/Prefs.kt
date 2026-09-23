@@ -63,6 +63,11 @@ class Prefs(context: Context) {
         get() = sp.getInt("money_parser_version", 0)
         set(v) = sp.edit { putInt("money_parser_version", v) }
 
+    /** Version of the email re-read last applied (threads split per subject, alerts and GitHub mail re-read). */
+    var emailRereadVersion: Int
+        get() = sp.getInt("email_reread_version", 0)
+        set(v) = sp.edit { putInt("email_reread_version", v) }
+
     var lastListenerEventAt: Long
         get() = sp.getLong("last_listener_event_at", 0L)
         set(v) = sp.edit { putLong("last_listener_event_at", v) }

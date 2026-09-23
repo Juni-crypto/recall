@@ -76,4 +76,12 @@ class RequestAndUrgencyTest {
     companion object {
         const val OpenLoopThreshold = 70
     }
+
+    @Test fun alertMailProblemsAreSpotted() {
+        assertTrue(SenderHeuristics.isProblem("[Cosmos] ETL run failed — Perfora / nykaa-daily"))
+        assertTrue(SenderHeuristics.isProblem("[Cosmos-dev] API errors — 22 in 5 minutes"))
+        assertTrue(SenderHeuristics.isProblem("[Cosmos-dev] Endpoint failing — GET /clients"))
+        assertFalse(SenderHeuristics.isProblem("[Cosmos] Warehouse build finished — Perfora\n1 alert(s) from Cosmos."))
+        assertFalse(SenderHeuristics.isProblem("[Cosmos] ClickHouse replica updated — perfora"))
+    }
 }

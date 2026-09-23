@@ -262,6 +262,40 @@ object Repo {
 
     // ---------------------------------------------------------------- model triage
 
+    /**
+     * One-time fix: emails used to be one conversation per sender, so the model only read the
+     * newest of them. Give recent ones their own thread and let the model read them again,
+     * except the ones already handled by a Done / Not for me on the old conversation.
+     */
+    fun splitEmailThreads(since: Long) {
+        val handled = r.rawQuery(
+            "SELECT conv_key, MAX(closed_at) FROM open_loop WHERE state IN ('closed','dismissed') AND closed_at IS NOT NULL GROUP BY conv_key",
+            null,
+        ).use { c -> buildMap { while (c.moveToNext()) put(c.getString(0), c.getLong(1)) } }
+        val rows = r.rawQuery(
+            "SELECT id, pkg, conv_key, sender, text, at FROM message WHERE kind = 'email' AND is_self = 0 AND at >= ?",
+            arrayOf(since.toString()),
+        ).use { c -> buildList { while (c.moveToNext()) add(listOf(c.getLong(0), c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getLong(5))) } }
+        w.beginTransaction()
+        try {
+            for (row in rows) {
+                val (id, pkg, oldKey, sender, text) = row
+                val at = row[5] as Long
+                // Closed either on the old per-sender conversation or on the thread itself.
+                val closedAt = handled[oldKey as String] ?: handled["$pkg|${sender ?: ""}"]
+                val done = closedAt?.let { it >= at } == true
+                w.execSQL(
+                    "UPDATE message SET conv_key = ?, triaged = CASE WHEN ? THEN triaged ELSE 0 END WHERE id = ?",
+                    arrayOf<Any>(app.recall.capture.MailThread.key(pkg as String, sender as String?, text as String), if (done) 1 else 0, id as Long),
+                )
+            }
+            w.setTransactionSuccessful()
+        } finally {
+            w.endTransaction()
+        }
+        db.changed()
+    }
+
     /** Recent messages from people that the model hasn't looked at yet. */
     fun triageCandidates(since: Long, limit: Int): List<Message> =
         r.rawQuery(

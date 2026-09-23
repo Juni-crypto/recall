@@ -1,5 +1,6 @@
 package app.recall.capture
 
+import android.app.Notification
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
@@ -49,8 +50,18 @@ class RecallListenerService : NotificationListenerService() {
 
     private fun handlePosted(sbn: StatusBarNotification) {
         try {
-            sbn.notification?.contentIntent?.let { contentIntents[Normalizer.convKey(sbn)] = it }
-            Ingestor.onPosted(this, sbn)
+            val n = sbn.notification
+            n?.contentIntent?.let { contentIntents[Normalizer.convKey(sbn)] = it }
+            val summary = n != null && n.flags and Notification.FLAG_GROUP_SUMMARY != 0
+            val hasChildren = !summary || try {
+                activeNotifications?.any {
+                    it.groupKey == sbn.groupKey && it.key != sbn.key &&
+                        it.notification.flags and Notification.FLAG_GROUP_SUMMARY == 0
+                } ?: false
+            } catch (_: Exception) {
+                true
+            }
+            Ingestor.onPosted(this, sbn, hasChildren)
         } catch (_: Exception) {
             // A malformed notification from one app must never stop capture.
         }

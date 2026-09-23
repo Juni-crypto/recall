@@ -55,7 +55,7 @@ object SenderHeuristics {
     private val ALL_CAPS_ID = Regex("""^[A-Z0-9]{5,11}$""")
     private val NO_REPLY = Regex("""no-?reply|donotreply|notifications?@|alerts?@|mailer|newsletter""", RegexOption.IGNORE_CASE)
     private val PROMO = Regex(
-        """\b(unsubscribe|offer|sale|% off|flat \d+|coupon|cashback|deal of|limited time|shop now|buy now|use code|free delivery|win |congratulations|reward points|t&c)\b""",
+        """\b(offer|sale|% off|flat \d+|coupon|cashback|deal of|limited time|shop now|buy now|use code|free delivery|win |congratulations|reward points|t&c)\b""",
         RegexOption.IGNORE_CASE,
     )
     private val OTP = Regex("""\b(otp|one[- ]time password|verification code|security code|login code)\b""", RegexOption.IGNORE_CASE)
@@ -76,4 +76,12 @@ object SenderHeuristics {
     )
 
     fun isSystemMail(text: String) = SYSTEM_MAIL.containsMatchIn(text)
+
+    // An automated mail saying something broke or needs action: worth the model's look.
+    private val PROBLEM = Regex(
+        """\b(fail(ed|ing|ure|s)?|errors?|down|outage|crash(ed|ing)?|critical|incident|suspend(ed|ing)?|suspension|action required|immediate action|breach|expir(ed|es|ing)|overdue|blocked|rejected|declined|denied|unhealthy|timed? ?out)\b""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    fun isProblem(text: String) = PROBLEM.containsMatchIn(text)
 }
