@@ -9,6 +9,8 @@ See [Build](README.md#build). Then:
 ```bash
 ./gradlew testOnlineDebugUnitTest   # parser + detector tests, no phone needed
 ./gradlew installOnlineDebug        # needs a phone over adb
+cd ios/RecallCore && swift test     # the iPhone rules and engine, on a Mac
+ios/scripts/build-ipa.sh            # unsigned Recall.ipa for AltStore / SideStore
 ```
 
 Debug builds can load made-up data for screenshots:
@@ -17,7 +19,9 @@ Debug builds can load made-up data for screenshots:
 adb shell am start -n app.recall/app.recall.ui.MainActivity --ez seed_demo true
 ```
 
-This wipes the app's database. Only use it on a test install.
+This wipes the app's database. Only use it on a test install. On the iOS simulator: `xcrun simctl launch booted app.recall -seedDemo YES`.
+
+The text rules exist twice, in Kotlin and in Swift (`ios/RecallCore/Sources/RecallCore/Understand`). If you change one, change the other and its tests.
 
 ## Where things live
 
@@ -35,6 +39,11 @@ app/src/main/java/app/recall/
 app/src/main/cpp/   JNI + llama.cpp submodule
 app/src/online/     model downloader (Standard edition)
 app/src/offline/    no-network stub (Offline edition)
+
+ios/RecallCore/     Swift package: the same rules, SQLite store, prompts, review, digest, Ask
+ios/Recall/         SwiftUI app, Shortcuts actions, llama.cpp runner (Metal), model downloads
+ios/RecallWidget/   home and lock-screen widget
+ios/project.yml     XcodeGen spec (the .xcodeproj isn't committed)
 docs/               website (GitHub Pages) + screenshots
 ```
 

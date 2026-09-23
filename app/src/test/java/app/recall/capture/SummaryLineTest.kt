@@ -5,7 +5,7 @@ import org.junit.Test
 
 class SummaryLineTest {
     @Test fun splitsSenderFromSubject() {
-        assertEquals("Cosmos" to "[Cosmos] Replica updated", SummaryLine.split("Cosmos   [Cosmos] Replica updated"))
+        assertEquals("Beacon" to "[Beacon] Replica updated", SummaryLine.split("Beacon   [Beacon] Replica updated"))
         assertEquals("Priya S" to "can you send the invoice", SummaryLine.split("Priya S: can you send the invoice"))
         assertEquals("Karthik R" to "Contract review", SummaryLine.split("Karthik R - Contract review"))
     }
@@ -18,14 +18,14 @@ class SummaryLineTest {
 class MailThreadTest {
     @Test fun repliesStayInTheirThread() {
         assertEquals(
-            MailThread.key("gm", "Shivam, Ishika", "Re: [Juni-crypto/cosmos] Refine export handling"),
-            MailThread.key("gm", "Shivam, Ishika", "RE: Fwd: [Juni-crypto/cosmos]  Refine export handling\nLGTM"),
+            MailThread.key("gm", "Dev, Asha", "Re: [acme-labs/beacon] Refine export handling"),
+            MailThread.key("gm", "Dev, Asha", "RE: Fwd: [acme-labs/beacon]  Refine export handling\nLGTM"),
         )
     }
 
     @Test fun differentMailsFromOneSenderAreSeparate() {
-        val a = MailThread.key("gm", "Cosmos", "[Cosmos] ETL run failed — Perfora / daily")
-        val b = MailThread.key("gm", "Cosmos", "[Cosmos] ClickHouse replica updated — perfora")
+        val a = MailThread.key("gm", "Beacon", "[Beacon] ETL run failed — orders / daily")
+        val b = MailThread.key("gm", "Beacon", "[Beacon] Warehouse replica updated — orders")
         assert(a != b)
     }
 }

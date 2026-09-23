@@ -5,7 +5,7 @@ package app.recall.capture
  * No Android types here, so it's unit-tested on the JVM.
  */
 object SummaryLine {
-    // "Cosmos   [Cosmos] Replica updated", "Priya: can you send it", "Karthik - Contract"
+    // "Beacon   [Beacon] Replica updated", "Priya: can you send it", "Karthik - Contract"
     private val SPLIT = Regex("""^(.{1,60}?)(?::\s|\s{2,}|\s[-–·|]\s)(.+)$""")
 
     /** Sender and text from a line with no formatting left. The sender is null if there isn't one. */

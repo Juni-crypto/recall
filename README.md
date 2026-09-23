@@ -1,6 +1,6 @@
 # Recall
 
-An Android app that reads every notification, remembers who's waiting on you, and tracks where your money went. The AI runs on your phone. Nothing leaves it.
+An app that remembers who's waiting on you and tracks where your money went. The AI runs on your phone. Nothing leaves it. For Android, with an iPhone preview.
 
 <p>
   <img src="docs/screens/home.png" width="200" alt="Home: the Recall orb">
@@ -9,7 +9,7 @@ An Android app that reads every notification, remembers who's waiting on you, an
   <img src="docs/screens/today.png" width="200" alt="Today">
 </p>
 
-**[Download the APK](https://github.com/Juni-crypto/recall/releases/latest)** · [Website](https://juni-crypto.github.io/recall/) · [Contribute](CONTRIBUTING.md)
+**[Download](https://github.com/Juni-crypto/recall/releases/latest)** · [Install guide](https://juni-crypto.github.io/recall/#install) · [Contribute](CONTRIBUTING.md)
 
 ## What it does
 
@@ -21,6 +21,10 @@ An Android app that reads every notification, remembers who's waiting on you, an
 - **Widget and lock-screen card.** What needs you, at a glance.
 
 A local model (Qwen3 or Llama 3.2 via [llama.cpp](https://github.com/ggml-org/llama.cpp)) reads each message and decides whether it needs you. Rules handle the rest, and SQL does every sum.
+
+## Android and iPhone
+
+On Android, Recall reads every notification. iOS doesn't let apps do that, so on iPhone your texts and emails reach Recall through Shortcuts automations, and WhatsApp chats come in as exports. The rest works the same on both: Waiting, Money, the digest, Ask, and the on-device model.
 
 ## Private by design
 
@@ -49,6 +53,13 @@ cd recall
 ```
 
 The first build compiles llama.cpp for each ARM CPU generation, so it takes a few minutes.
+
+iPhone (Xcode 26, `brew install xcodegen cmake`):
+
+```bash
+ios/scripts/build-llama.sh          # llama.xcframework, once
+cd ios && xcodegen && open Recall.xcodeproj
+```
 
 ## Limits
 

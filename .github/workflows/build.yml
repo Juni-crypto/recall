@@ -1,4 +1,4 @@
-name: Build APKs
+name: Build
 
 on:
   push:
@@ -66,3 +66,36 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: app/build/outputs/apk/**/release/*.apk
+
+  ios:
+    runs-on: macos-26
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Tools
+        run: |
+          brew install xcodegen
+          xcodebuild -downloadComponent MetalToolchain
+
+      - name: Core tests
+        run: cd ios/RecallCore && swift test
+
+      - name: Build Recall.ipa
+        run: ios/scripts/build-ipa.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recall-ipa
+          path: ios/build/ipa/Recall.ipa
+
+      # Sideloading tools re-sign the IPA with each user's Apple ID, so it can go straight into releases.
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ios/build/ipa/Recall.ipa
+

@@ -69,7 +69,7 @@ object SenderHeuristics {
 
     fun isPromo(text: String) = PROMO.containsMatchIn(text)
 
-    // System mail: "[Cosmos] Warehouse build finished", "3 alert(s) from …", CI and deploy notices.
+    // System mail: "[Beacon] Warehouse build finished", "3 alert(s) from …", CI and deploy notices.
     private val SYSTEM_MAIL = Regex(
         """^\s*\[[^\]]{2,40}]|\balert\(s\)|\b(build|deploy(ment)?|pipeline|job|run|workflow) (finished|failed|succeeded|passed|completed)\b|\b(weekly|daily|monthly) (report|digest|summary)\b|\bdo not reply\b""",
         RegexOption.IGNORE_CASE,

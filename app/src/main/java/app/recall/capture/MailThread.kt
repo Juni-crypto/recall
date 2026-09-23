@@ -8,7 +8,7 @@ object MailThread {
     private val PREFIX = Regex("""^\s*((re|fwd?|aw|wg)\s*(\[\d+])?\s*:\s*)+""", RegexOption.IGNORE_CASE)
     private val SPACE = Regex("""\s+""")
 
-    /** "Re: Fwd: [Cosmos] ETL run failed…" -> "[cosmos] etl run failed" */
+    /** "Re: Fwd: [Beacon] ETL run failed…" -> "[beacon] etl run failed" */
     fun subject(text: String): String =
         text.lineSequence().firstOrNull { it.isNotBlank() }.orEmpty()
             .replace(PREFIX, "").replace(SPACE, " ").trim().trimEnd('…', '.').trim()

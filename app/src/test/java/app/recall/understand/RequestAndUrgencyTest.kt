@@ -19,7 +19,7 @@ class RequestAndUrgencyTest {
     }
 
     @Test fun systemMailIsAutomated() {
-        assertTrue(SenderHeuristics.isSystemMail("[Cosmos] Warehouse build finished — Perfora 1 alert(s) from Cosmos"))
+        assertTrue(SenderHeuristics.isSystemMail("[Beacon] Warehouse build finished — Orders 1 alert(s) from Beacon"))
         assertFalse(SenderHeuristics.isSystemMail("Can you review the contract before Friday?"))
     }
 
@@ -78,10 +78,10 @@ class RequestAndUrgencyTest {
     }
 
     @Test fun alertMailProblemsAreSpotted() {
-        assertTrue(SenderHeuristics.isProblem("[Cosmos] ETL run failed — Perfora / nykaa-daily"))
-        assertTrue(SenderHeuristics.isProblem("[Cosmos-dev] API errors — 22 in 5 minutes"))
-        assertTrue(SenderHeuristics.isProblem("[Cosmos-dev] Endpoint failing — GET /clients"))
-        assertFalse(SenderHeuristics.isProblem("[Cosmos] Warehouse build finished — Perfora\n1 alert(s) from Cosmos."))
-        assertFalse(SenderHeuristics.isProblem("[Cosmos] ClickHouse replica updated — perfora"))
+        assertTrue(SenderHeuristics.isProblem("[Beacon] ETL run failed — orders / nightly"))
+        assertTrue(SenderHeuristics.isProblem("[Beacon-dev] API errors — 22 in 5 minutes"))
+        assertTrue(SenderHeuristics.isProblem("[Beacon-dev] Endpoint failing — GET /clients"))
+        assertFalse(SenderHeuristics.isProblem("[Beacon] Warehouse build finished — Orders\n1 alert(s) from Beacon."))
+        assertFalse(SenderHeuristics.isProblem("[Beacon] Warehouse replica updated — orders"))
     }
 }

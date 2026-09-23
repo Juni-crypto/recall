@@ -9,3 +9,10 @@ build/
 *.keystore
 *.jks
 dist/
+# iOS: build output, the generated project (run `xcodegen` in ios/) and llama.xcframework (ios/scripts/build-llama.sh)
+ios/build/
+ios/Frameworks/
+ios/Recall.xcodeproj/
+ios/RecallCore/.build/
+ios/RecallCore/.swiftpm/
+xcuserdata/

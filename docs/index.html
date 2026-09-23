@@ -149,7 +149,7 @@ code,.mono{font-family:"Plex Mono",ui-monospace,monospace}
 .get{padding:0 0 128px}
 .get h2{margin-bottom:16px}
 .get .sub{margin-bottom:40px}
-.editions{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.editions{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:16px}
 .ed{border-radius:var(--r-panel);border:1px solid var(--line);background:var(--panel);padding:36px;display:flex;flex-direction:column;gap:14px}
 .ed.main{background:linear-gradient(150deg,#1D2442,var(--panel) 70%);border-color:#2E3760}
 .ed .perm{font:400 13px/1 "Plex Mono",monospace;color:var(--muted);display:flex;align-items:center;gap:8px}
@@ -163,6 +163,13 @@ code,.mono{font-family:"Plex Mono",ui-monospace,monospace}
 .install{padding:0 0 128px}
 .install .wrap{display:grid;grid-template-columns:.8fr 1.2fr;grid-template-areas:"lead steps" "faq steps";grid-template-rows:auto 1fr;column-gap:64px;align-items:start}
 .install .lead{grid-area:lead}
+[hidden]{display:none !important}
+.platforms{display:inline-flex;gap:4px;padding:4px;margin-top:20px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+.platforms button{height:40px;padding:0 18px;border:0;border-radius:999px;background:none;color:var(--muted);font:600 15px/1 "Plex Sans",sans-serif;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .2s,color .2s}
+.platforms button i{font-size:18px}
+.platforms button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ios-shots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px;max-width:340px}
+.ios-shots img{border-radius:18px;border:1px solid var(--line);width:100%;height:auto}
 .install .steps{grid-area:steps}
 .install .faq{grid-area:faq}
 .install .lead p{margin-top:16px}
@@ -213,6 +220,8 @@ footer a:hover{color:var(--text)}
 
 /* Tablet */
 @media (max-width:1023px){
+  .editions{grid-template-columns:1fr 1fr}
+  .editions .ed.main{grid-column:span 2}
   .bento{grid-template-columns:repeat(2,1fr)}
   .c-wait,.c-money,.c-learn{grid-column:span 2}
   .c-digest,.c-ask{grid-column:span 1}
@@ -247,6 +256,7 @@ footer a:hover{color:var(--text)}
   .flow li::before{left:-36px;top:6px}
   .term{font-size:13px;padding:22px}
   .editions{grid-template-columns:1fr}
+  .ios-shots{max-width:none}
   .install .wrap{grid-template-columns:1fr;grid-template-areas:"lead" "steps" "faq";row-gap:28px}
   .steps>li{grid-template-columns:32px 1fr;gap:14px;padding:20px}
   .steps>li::before{width:32px;height:32px;font-size:14px}
@@ -378,32 +388,50 @@ footer a:hover{color:var(--text)}
   <section class="get" id="get" aria-labelledby="get-h">
     <div class="wrap">
       <h2 id="get-h" class="rv">Get Recall</h2>
-      <p class="sub rv">Android 10 or newer. 8 GB of RAM or more works best.</p>
+      <p class="sub rv">Android 10 or newer, or an iPhone on iOS 17 or newer. A phone with 8 GB of RAM works best.</p>
       <div class="editions">
         <div class="ed main rv">
-          <span class="perm"><i class="ph ph-cloud-arrow-down" aria-hidden="true"></i>Internet: model download only</span>
+          <span class="perm"><i class="ph ph-android-logo" aria-hidden="true"></i>Android · internet for the model only</span>
           <h3>Standard</h3>
           <p>Pick a model in the app and it downloads over Wi-Fi. Recall suggests one that fits your phone.</p>
           <a class="btn btn-primary" href="https://github.com/Juni-crypto/recall/releases/latest/download/Recall-standard.apk"><i class="ph ph-android-logo" aria-hidden="true"></i>Standard APK</a>
         </div>
         <div class="ed rv" style="--i:1">
-          <span class="perm"><i class="ph ph-wifi-slash" aria-hidden="true"></i>Internet: none</span>
+          <span class="perm"><i class="ph ph-wifi-slash" aria-hidden="true"></i>Android · no internet at all</span>
           <h3>Offline</h3>
           <p>Download a .gguf model in your browser, then import it. Installs next to Standard.</p>
           <a class="btn btn-ghost" href="https://github.com/Juni-crypto/recall/releases/latest/download/Recall-offline.apk"><i class="ph ph-android-logo" aria-hidden="true"></i>Offline APK</a>
         </div>
+        <div class="ed rv" style="--i:2">
+          <span class="perm"><i class="ph ph-apple-logo" aria-hidden="true"></i>iPhone · preview</span>
+          <h3>iPhone</h3>
+          <p>Your texts and emails reach it through Shortcuts. Install it with AltStore or SideStore: <a href="#install-iphone">here's how</a>.</p>
+          <a class="btn btn-ghost" href="https://github.com/Juni-crypto/recall/releases/latest/download/Recall.ipa"><i class="ph ph-apple-logo" aria-hidden="true"></i>iPhone IPA</a>
+        </div>
       </div>
-      <p class="note">These are preview builds, signed with a debug key. <a href="https://github.com/Juni-crypto/recall/releases">Checksums and older versions</a> are on GitHub.</p>
+      <p class="note">These are preview builds. The APKs are signed with a debug key; the IPA is signed with your own Apple ID when you install it. <a href="https://github.com/Juni-crypto/recall/releases">Checksums and older versions</a> are on GitHub.</p>
     </div>
   </section>
 
   <section class="install" id="install" aria-labelledby="install-h">
     <div class="wrap">
       <div class="lead rv">
-        <h2 id="install-h">Install on Android</h2>
-        <p>Recall isn't on the Play Store yet, so you install the APK file yourself. It takes a few minutes. Do it on the phone.</p>
+        <h2 id="install-h">Install</h2>
+        <div class="platforms" role="tablist" aria-label="Your phone">
+          <button type="button" role="tab" id="tab-android" aria-controls="steps-android" aria-selected="true" data-p="android"><i class="ph ph-android-logo" aria-hidden="true"></i>Android</button>
+          <button type="button" role="tab" id="tab-iphone" aria-controls="steps-iphone" aria-selected="false" data-p="iphone"><i class="ph ph-apple-logo" aria-hidden="true"></i>iPhone</button>
+        </div>
+        <p data-for="android">Recall isn't on the Play Store yet, so you install the APK file yourself. It takes a few minutes. Do it on the phone.</p>
+        <div data-for="iphone" hidden>
+          <p>Recall isn't on the App Store. You install it with AltStore or SideStore, signed with your own Apple ID. Give it 15 minutes the first time.</p>
+          <p>iPhone apps can't read other apps' notifications, so Shortcuts hands your texts and emails to Recall instead. It sees what you route to it, not everything.</p>
+          <div class="ios-shots">
+            <img src="screens/ios-home.png" alt="Recall on iPhone: the orb and who's waiting" loading="lazy" width="540" height="1106">
+            <img src="screens/ios-waiting.png" alt="Waiting on you, on iPhone" loading="lazy" width="540" height="1106">
+          </div>
+        </div>
       </div>
-      <ol class="steps">
+      <ol class="steps" id="steps-android" role="tabpanel" aria-labelledby="tab-android" data-for="android">
         <li class="rv">
           <div>
             <h3>Download the APK</h3>
@@ -438,7 +466,41 @@ footer a:hover{color:var(--text)}
           </div>
         </li>
       </ol>
-      <div class="faq rv">
+      <ol class="steps" id="steps-iphone" role="tabpanel" aria-labelledby="tab-iphone" data-for="iphone" hidden>
+        <li>
+          <div>
+            <h3>Set up AltStore or SideStore</h3>
+            <p>These install apps from outside the App Store with a free Apple ID. <a href="https://altstore.io" style="color:var(--accent)">AltStore</a> needs AltServer running on a Mac or PC. <a href="https://sidestore.io" style="color:var(--accent)">SideStore</a> needs a computer only for its first setup. Follow their guide once.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Turn on Developer Mode</h3>
+            <p>Open <b>Settings → Privacy &amp; Security → Developer Mode</b>, turn it on and let the iPhone restart. Sideloaded apps won't open without it.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Install Recall</h3>
+            <p>On the iPhone, tap <b>iPhone IPA</b> above and save it to Files. In AltStore or SideStore, open <b>My Apps</b>, tap <b>+</b> and pick <b>Recall.ipa</b>.</p>
+            <p class="tip">A free Apple ID signs apps for 7 days. AltStore and SideStore refresh Recall in the background; open them now and then so it doesn't expire. Your data stays either way.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Route your texts and emails</h3>
+            <p>Open Recall and go to <b>You → Set up Shortcuts</b>. In the Shortcuts app, make <b>Message</b> automations for texts containing <b>debited</b> and <b>credited</b>, one for the people you care about, and an <b>Email</b> automation. Each runs <b>Add to Recall</b> and is set to <b>Run Immediately</b>.</p>
+            <p class="tip">Recall walks you through each one, with a box to paste a test message and see how it's read.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Give Recall a brain</h3>
+            <p><b>You → Model</b>. Qwen3 1.7B (1.1 GB) suits most iPhones; the 4B model is for iPhone 15 Pro and newer. Use Wi-Fi. Waiting and Money work without a model.</p>
+          </div>
+        </li>
+      </ol>
+      <div class="faq rv" data-for="android">
         <details>
           <summary>The notification access switch is greyed out<i class="ph ph-plus" aria-hidden="true"></i></summary>
           <p>Android 13 and newer does this for apps installed from a file. Open <b>Settings → Apps → Recall</b>, tap <b>⋮</b> at the top right, then <b>Allow restricted settings</b>. Go back to Recall and try again.</p>
@@ -460,6 +522,28 @@ footer a:hover{color:var(--text)}
           <p>Download the new APK and install it over the old one. Everything Recall learned stays.</p>
         </details>
       </div>
+      <div class="faq" data-for="iphone" hidden>
+        <details>
+          <summary>Why doesn't it read WhatsApp or Slack like on Android?<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>iOS doesn't let any app read another app's notifications. Texts and email come in through Shortcuts. For WhatsApp, export a chat (<b>chat name → Export Chat → Without Media</b>) and share it to Recall.</p>
+        </details>
+        <details>
+          <summary>Recall won't open<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>Either Developer Mode is off, or the 7-day signature ran out. Open AltStore or SideStore and tap <b>Refresh</b> on Recall.</p>
+        </details>
+        <details>
+          <summary>Nothing shows up in Recall<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>Check each automation in Shortcuts is set to <b>Run Immediately</b> and its <b>Message</b> is the <b>Shortcut Input's Content</b>. The test box in <b>You → Set up Shortcuts</b> shows whether Recall itself reads a message.</p>
+        </details>
+        <details>
+          <summary>The digest has old news<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>iOS can't wake an app at an exact time, so Recall rewrites the 9:30 PM notification each time a message comes in or you open it. On a quiet day it may only say how many people are waiting.</p>
+        </details>
+        <details>
+          <summary>Why not the App Store?<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>Publishing there needs a paid Apple developer account. The IPA is the free way to try it now.</p>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -467,7 +551,7 @@ footer a:hover{color:var(--text)}
     <div class="wrap">
       <div class="rv">
         <h2 id="contrib-h">Build it with us</h2>
-        <p>Kotlin, Jetpack Compose and llama.cpp. These are good places to start:</p>
+        <p>Kotlin and Jetpack Compose on Android, SwiftUI on iPhone, llama.cpp on both. Good places to start:</p>
         <div class="issues">
           <a href="https://github.com/Juni-crypto/recall/issues/new?template=bank_sms.yml"><div>Your bank's SMS isn't read<span>Send a redacted sample, or fix the parser</span></div><i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
           <a href="https://github.com/Juni-crypto/recall/blob/main/CONTRIBUTING.md#good-first-issues"><div>Requests in your language<span>Tamil, Hindi and more for the request rules</span></div><i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
@@ -512,6 +596,19 @@ footer a:hover{color:var(--text)}
     entries.forEach(function(en){ if (en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
   }, {rootMargin:"0px 0px -8% 0px"});
   document.querySelectorAll(".rv").forEach(function(el){ io.observe(el); });
+
+  // Install: Android / iPhone switch. #install-iphone opens the iPhone steps.
+  var tabs = document.querySelectorAll(".platforms [role=tab]");
+  function show(p){
+    tabs.forEach(function(t){ t.setAttribute("aria-selected", t.dataset.p === p ? "true" : "false"); });
+    document.querySelectorAll("#install [data-for]").forEach(function(el){ el.hidden = el.dataset.for !== p; });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.p); }); });
+  function fromHash(){
+    if (location.hash === "#install-iphone"){ show("iphone"); document.getElementById("install").scrollIntoView(); }
+  }
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
 
   // Screens: pin and pan with the page scroll where supported, else a swipeable rail.
   var rail = document.getElementById("rail");
