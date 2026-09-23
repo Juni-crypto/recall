@@ -159,6 +159,31 @@ code,.mono{font-family:"Plex Mono",ui-monospace,monospace}
 .note{margin-top:20px;font-size:14px;color:var(--dim);max-width:none}
 .note a{color:var(--muted)}
 
+/* Install */
+.install{padding:0 0 128px}
+.install .wrap{display:grid;grid-template-columns:.8fr 1.2fr;grid-template-areas:"lead steps" "faq steps";grid-template-rows:auto 1fr;column-gap:64px;align-items:start}
+.install .lead{grid-area:lead}
+.install .steps{grid-area:steps}
+.install .faq{grid-area:faq}
+.install .lead p{margin-top:16px}
+.steps{list-style:none;counter-reset:st;display:grid;gap:12px}
+.steps>li{counter-increment:st;display:grid;grid-template-columns:40px 1fr;gap:18px;padding:24px;border-radius:var(--r-panel);border:1px solid var(--line);background:var(--panel)}
+.steps>li::before{content:counter(st);width:40px;height:40px;border-radius:999px;display:grid;place-items:center;font:600 16px/1 "Plex Mono",monospace;color:var(--accent-ink);background:var(--accent)}
+.steps h3{font-size:19px;margin:8px 0 8px}
+.steps p{font-size:16px}
+.steps p+p{margin-top:8px}
+.steps b{color:var(--text);font-weight:600}
+.steps .tip{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:15px}
+.faq{margin-top:28px;display:grid;gap:0}
+.faq details{border-top:1px solid var(--line)}
+.faq details:last-child{border-bottom:1px solid var(--line)}
+.faq summary{cursor:pointer;list-style:none;padding:16px 0;display:flex;justify-content:space-between;gap:16px;font-weight:600;font-size:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary i{transition:transform .25s var(--ease);color:var(--muted)}
+.faq details[open] summary i{transform:rotate(45deg)}
+.faq details p{font-size:15px;padding:0 0 16px}
+.faq b{color:var(--text);font-weight:600}
+
 /* Contribute */
 .contrib{padding:0 0 128px}
 .contrib .wrap{display:grid;grid-template-columns:1fr 1.1fr;gap:64px;align-items:center}
@@ -222,6 +247,11 @@ footer a:hover{color:var(--text)}
   .flow li::before{left:-36px;top:6px}
   .term{font-size:13px;padding:22px}
   .editions{grid-template-columns:1fr}
+  .install .wrap{grid-template-columns:1fr;grid-template-areas:"lead" "steps" "faq";row-gap:28px}
+  .steps>li{grid-template-columns:32px 1fr;gap:14px;padding:20px}
+  .steps>li::before{width:32px;height:32px;font-size:14px}
+  .steps h3{margin-top:4px}
+  .install{padding-bottom:88px}
   .ed{padding:28px}
   .bento-sec,.get,.contrib{padding-bottom:88px}
   .btn{height:50px;padding:0 20px}
@@ -236,6 +266,7 @@ footer a:hover{color:var(--text)}
     <nav class="nav-links" aria-label="Main">
       <a href="#how">How it works</a>
       <a href="#privacy">Privacy</a>
+      <a href="#install">Install</a>
       <a href="#contribute">Contribute</a>
       <a class="gh" href="https://github.com/Juni-crypto/recall"><i class="ph ph-github-logo" aria-hidden="true"></i>GitHub</a>
     </nav>
@@ -363,6 +394,72 @@ footer a:hover{color:var(--text)}
         </div>
       </div>
       <p class="note">These are preview builds, signed with a debug key. <a href="https://github.com/Juni-crypto/recall/releases">Checksums and older versions</a> are on GitHub.</p>
+    </div>
+  </section>
+
+  <section class="install" id="install" aria-labelledby="install-h">
+    <div class="wrap">
+      <div class="lead rv">
+        <h2 id="install-h">Install on Android</h2>
+        <p>Recall isn't on the Play Store yet, so you install the APK file yourself. It takes a few minutes. Do it on the phone.</p>
+      </div>
+      <ol class="steps">
+        <li class="rv">
+          <div>
+            <h3>Download the APK</h3>
+            <p>Tap <b>Standard APK</b> above. If Chrome warns that the file might be harmful, tap <b>Download anyway</b>.</p>
+          </div>
+        </li>
+        <li class="rv">
+          <div>
+            <h3>Install it</h3>
+            <p>Open the file from the download notification or the Files app. If Android asks, tap <b>Settings</b>, turn on <b>Allow from this source</b>, go back and tap <b>Install</b>.</p>
+            <p class="tip">If Play Protect says the app is unknown, tap <b>More details → Install anyway</b>. It's unknown because it isn't on the Play Store.</p>
+          </div>
+        </li>
+        <li class="rv">
+          <div>
+            <h3>Open Recall and allow access</h3>
+            <p>Tap <b>Get started</b>, then turn on <b>Allow notification access</b>, <b>Allow notifications</b> and <b>Allow exact timing</b>. <b>Allow SMS access</b> is optional; it's how Money reads bank SMS.</p>
+            <p class="tip">Is the notification access switch greyed out? Open <b>Settings → Apps → Recall → ⋮ → Allow restricted settings</b>, then come back.</p>
+          </div>
+        </li>
+        <li class="rv">
+          <div>
+            <h3>Give Recall a brain</h3>
+            <p>Pick the model Recall suggests for your phone and tap <b>Download</b>. It's 0.4 to 2.5 GB, so use Wi-Fi. You can skip this: capture, Waiting and Money work without it.</p>
+            <p class="tip">Offline edition: open the <b>Download link</b> in your browser, then tap <b>Import a .gguf file</b> and pick the file.</p>
+          </div>
+        </li>
+        <li class="rv">
+          <div>
+            <h3>Keep it running</h3>
+            <p>Tap <b>Allow background running</b>, then set battery to <b>Unrestricted</b>. OnePlus, Xiaomi, Samsung, Oppo and Vivo close background apps otherwise, and the digest won't come.</p>
+          </div>
+        </li>
+      </ol>
+      <div class="faq rv">
+        <details>
+          <summary>The notification access switch is greyed out<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>Android 13 and newer does this for apps installed from a file. Open <b>Settings → Apps → Recall</b>, tap <b>⋮</b> at the top right, then <b>Allow restricted settings</b>. Go back to Recall and try again.</p>
+        </details>
+        <details>
+          <summary>"App not installed"<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>A Recall from somewhere else is already on the phone, signed differently. Uninstall it first, then install this one. Uninstalling deletes what it had stored.</p>
+        </details>
+        <details>
+          <summary>The 9:30 PM digest didn't arrive<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>Your phone probably stopped Recall in the background. Set battery to <b>Unrestricted</b> (step 5) and make sure <b>Allow exact timing</b> is on.</p>
+        </details>
+        <details>
+          <summary>Money is empty<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>Android 15 and newer hides most bank alerts from notification readers. Tap <b>Allow SMS access</b> in Recall so it reads bank SMS directly. They never leave the phone.</p>
+        </details>
+        <details>
+          <summary>Updating to a new version<i class="ph ph-plus" aria-hidden="true"></i></summary>
+          <p>Download the new APK and install it over the old one. Everything Recall learned stays.</p>
+        </details>
+      </div>
     </div>
   </section>
 
