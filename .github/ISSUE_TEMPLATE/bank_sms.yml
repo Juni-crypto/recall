@@ -1,0 +1,30 @@
+name: Bank SMS not read
+description: A payment message Recall missed or got wrong
+labels: [money, good first issue]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Redact before posting.** Replace your name, account and card digits, UPI IDs and reference numbers with X. Keep the amount format, the words and the punctuation as they are, because that's what the parser reads.
+  - type: input
+    id: bank
+    attributes:
+      label: Bank or app
+      placeholder: HDFC Bank, GPay, ICICI credit card
+    validations:
+      required: true
+  - type: textarea
+    id: sms
+    attributes:
+      label: The message (redacted)
+      render: text
+      placeholder: "Sent Rs.250.00 from A/c XX1234 to XXXXX@okaxis on 12-09-26. Ref XXXXXXXX"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What Recall should show
+      placeholder: "Spent ₹250 to Swiggy, Food"
+    validations:
+      required: true

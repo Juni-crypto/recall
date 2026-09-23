@@ -1,0 +1,64 @@
+name: Build APKs
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths-ignore: ["docs/**", "**.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**.md"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install SDK 37, NDK and CMake
+        run: sdkmanager "platforms;android-37.0" "ndk;27.1.12297006" "cmake;3.22.1"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests
+        run: ./gradlew testOnlineDebugUnitTest
+
+      # Releases must always be signed with the same key, or users can't update.
+      # Without the RECALL_KEYSTORE_B64 secret, APKs are built but not attached to releases.
+      - name: Release key
+        env:
+          KEYSTORE_B64: ${{ secrets.RECALL_KEYSTORE_B64 }}
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/recall.jks"
+          echo "RECALL_KEYSTORE=$RUNNER_TEMP/recall.jks" >> "$GITHUB_ENV"
+          echo "SIGNED=true" >> "$GITHUB_ENV"
+
+      - name: Build both editions
+        env:
+          RECALL_KEYSTORE_PASSWORD: ${{ secrets.RECALL_KEYSTORE_PASSWORD }}
+          RECALL_KEY_ALIAS: ${{ secrets.RECALL_KEY_ALIAS }}
+          RECALL_KEY_PASSWORD: ${{ secrets.RECALL_KEY_PASSWORD }}
+        run: ./gradlew assembleOnlineRelease assembleOfflineRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recall-apks
+          path: app/build/outputs/apk/**/release/*.apk
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v') && env.SIGNED == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/**/release/*.apk

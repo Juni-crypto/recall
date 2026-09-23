@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recall</title>
+<meta name="description" content="An Android app that reads every notification, remembers who's waiting on you, and tracks your money. The AI runs on your phone.">
+<meta name="theme-color" content="#0E1116">
+<meta property="og:title" content="Recall">
+<meta property="og:description" content="Remembers who's waiting on you. The AI runs on your phone, nothing leaves it.">
+<meta property="og:image" content="https://juni-crypto.github.io/recall/screens/home.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.3'%3E%3Cstop offset='0' stop-color='%23d7ddff'/%3E%3Cstop offset='.5' stop-color='%237c6bff'/%3E%3Cstop offset='1' stop-color='%23241a75'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='14' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/bricolage.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+/* Fonts are the app's own (SIL OFL), served from this folder. */
+@font-face{font-family:"Bricolage";src:url(fonts/bricolage.ttf) format("truetype");font-weight:200 800;font-display:swap}
+@font-face{font-family:"Plex Sans";src:url(fonts/plex_sans.ttf) format("truetype");font-weight:100 700;font-display:swap}
+@font-face{font-family:"Plex Mono";src:url(fonts/plex_mono.ttf) format("truetype");font-weight:400;font-display:swap}
+
+/* The app is dark-only (it's built around a 9:30 PM digest), so the site is too. */
+:root{
+  color-scheme:dark;
+  --bg:#0E1116;
+  --bg-2:#131722;
+  --panel:#161B27;
+  --line:#242B3A;
+  --text:#E8EAF2;
+  --muted:#9AA3B8;
+  --dim:#6B7489;
+  --accent:#AEB9FF;
+  --accent-ink:#141A3A;
+  --r-panel:20px;
+  --r-shot:22px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --wrap:1180px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font:400 17px/1.6 "Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{display:block;max-width:100%}
+a{color:inherit}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:"Bricolage",system-ui,sans-serif;font-weight:700;letter-spacing:-.025em;line-height:1.05}
+h2{font-size:clamp(32px,4.4vw,52px)}
+h3{font-size:22px;letter-spacing:-.015em;line-height:1.2}
+p{color:var(--muted);max-width:60ch}
+code,.mono{font-family:"Plex Mono",ui-monospace,monospace}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+/* Buttons: always pills. */
+.btn{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 24px;border-radius:999px;font:600 16px/1 "Plex Sans",sans-serif;text-decoration:none;white-space:nowrap;transition:transform .25s var(--ease),background .25s var(--ease),border-color .25s var(--ease)}
+.btn i{font-size:20px}
+.btn:active{transform:translateY(1px) scale(.98)}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:#C4CCFF}
+.btn-ghost{border:1px solid var(--line);color:var(--text)}
+.btn-ghost:hover{border-color:#3A4460;background:var(--bg-2)}
+
+/* Nav */
+.nav{position:sticky;top:0;z-index:10;background:rgba(14,17,22,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid transparent;transition:border-color .3s}
+.nav.scrolled{border-color:var(--line)}
+.nav .wrap{height:64px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px/1 "Bricolage",sans-serif;letter-spacing:-.02em;text-decoration:none}
+.brand-dot{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#D7DDFF,#7C6BFF 50%,#241A75)}
+.nav-links{display:flex;align-items:center;gap:28px;font-size:15px}
+.nav-links a{text-decoration:none;color:var(--muted);transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-links .gh{display:inline-flex;align-items:center;gap:6px;color:var(--text)}
+.nav-links .gh i{font-size:20px}
+
+/* Hero */
+.hero{min-height:calc(100dvh - 64px);display:grid;align-items:center;padding:48px 0 72px}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(44px,6.4vw,84px);max-width:11ch}
+.hero p{font-size:20px;margin:24px 0 36px;max-width:34ch}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.orb-stage{position:relative;aspect-ratio:1;width:100%;max-width:560px;justify-self:end}
+.orb-stage canvas{width:100%;height:100%;display:block;cursor:pointer}
+.orb-fallback{border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFD2B0,#FF5E61 45%,#66102E 75%,transparent 76%)}
+
+/* Screens rail */
+.rail-sec{padding:40px 0 112px}
+.rail-head{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:36px}
+.rail-btns{display:flex;gap:8px}
+.rail-btns button{width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--text);font-size:20px;display:grid;place-items:center;cursor:pointer;transition:background .2s,transform .2s var(--ease)}
+.rail-btns button:hover{background:var(--bg-2)}
+.rail-btns button:active{transform:scale(.95)}
+.rail{display:grid;grid-auto-flow:column;grid-auto-columns:clamp(220px,24vw,270px);gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px max(24px,calc((100vw - var(--wrap))/2 + 24px)) 12px;scroll-padding:0 max(24px,calc((100vw - var(--wrap))/2 + 24px))}
+.rail::-webkit-scrollbar{display:none}
+.rail figure{scroll-snap-align:start}
+.shot{height:auto;border-radius:var(--r-shot);border:1px solid var(--line);background:var(--bg-2);aspect-ratio:540/1151;width:100%;object-fit:cover;box-shadow:0 30px 60px -30px rgba(4,6,14,.9)}
+.rail figcaption{margin-top:14px;font-size:15px;color:var(--muted)}
+.rail figcaption b{display:block;color:var(--text);font-weight:600;margin-bottom:2px}
+
+/* Bento */
+.bento-sec{padding:0 0 128px}
+.bento-sec h2{margin-bottom:40px}
+.bento{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:minmax(200px,auto);gap:16px}
+.cell{border-radius:var(--r-panel);border:1px solid var(--line);background:var(--panel);padding:32px;display:flex;flex-direction:column;gap:12px;overflow:hidden;position:relative}
+.cell p{font-size:16px}
+.cell i.lead{font-size:28px;color:var(--accent);margin-bottom:8px}
+.c-wait{grid-column:span 4;grid-row:span 2;display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:40px 0 0 40px;background:linear-gradient(160deg,#1A2033 0%,var(--panel) 60%)}
+.c-wait .txt{display:flex;flex-direction:column;gap:14px;padding-bottom:40px}
+.c-wait h3{font-size:30px}
+.c-wait .quote{font:400 15px/1.5 "Plex Mono",monospace;color:var(--text);border-left:2px solid #FF6B6B;padding-left:14px;margin-top:8px}
+.c-wait img{align-self:end;border-radius:var(--r-shot) 0 0 0;border:1px solid var(--line);border-bottom:0;border-right:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.c-digest{grid-column:span 2}
+.c-money{grid-column:span 2;grid-row:span 2;padding:32px 32px 0;background:linear-gradient(180deg,var(--panel) 0%,#12261F 100%)}
+.c-money img{margin-top:24px;border-radius:var(--r-shot) var(--r-shot) 0 0;border:1px solid var(--line);border-bottom:0;height:280px;width:100%;object-fit:cover;object-position:top}
+.c-ask{grid-column:span 2}
+.c-learn{grid-column:span 2}
+.c-ask .mono{font-size:14px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.time{font:700 44px/1 "Bricolage",sans-serif;letter-spacing:-.03em;color:var(--text);margin-bottom:auto;padding-bottom:20px}
+
+/* Privacy */
+.privacy{padding:120px 0;background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.privacy .wrap{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
+.privacy h2{font-size:clamp(40px,5.6vw,72px);max-width:9ch}
+.privacy .lede{margin-top:24px;font-size:18px}
+.facts{display:grid;gap:36px;padding-top:12px}
+.fact{display:grid;grid-template-columns:48px 1fr;gap:18px}
+.fact i{font-size:24px;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);color:var(--accent)}
+.fact h3{font-size:20px;margin-bottom:6px}
+.fact p{font-size:16px}
+
+/* How it works */
+.how{padding:128px 0}
+.how h2{margin-bottom:56px}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;position:relative;counter-reset:s}
+.flow::before{content:"";position:absolute;top:7px;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--accent),var(--line) 70%)}
+.flow li{list-style:none;position:relative;padding-top:40px}
+.flow li::before{content:"";position:absolute;top:0;left:0;width:15px;height:15px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}
+.flow h3{margin-bottom:10px}
+.flow p{font-size:16px}
+
+/* Download */
+.get{padding:0 0 128px}
+.get h2{margin-bottom:16px}
+.get .sub{margin-bottom:40px}
+.editions{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.ed{border-radius:var(--r-panel);border:1px solid var(--line);background:var(--panel);padding:36px;display:flex;flex-direction:column;gap:14px}
+.ed.main{background:linear-gradient(150deg,#1D2442,var(--panel) 70%);border-color:#2E3760}
+.ed .perm{font:400 13px/1 "Plex Mono",monospace;color:var(--muted);display:flex;align-items:center;gap:8px}
+.ed .perm i{font-size:16px;color:var(--accent)}
+.ed .btn{margin-top:auto;align-self:flex-start}
+.ed p{font-size:16px;margin-bottom:12px}
+.note{margin-top:20px;font-size:14px;color:var(--dim);max-width:none}
+.note a{color:var(--muted)}
+
+/* Contribute */
+.contrib{padding:0 0 128px}
+.contrib .wrap{display:grid;grid-template-columns:1fr 1.1fr;gap:64px;align-items:center}
+.contrib h2{margin-bottom:16px}
+.issues{margin:28px 0 32px;display:grid;gap:0}
+.issues a{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:16px 0;border-top:1px solid var(--line);text-decoration:none;color:var(--text);transition:padding .25s var(--ease),color .2s}
+.issues a:last-child{border-bottom:1px solid var(--line)}
+.issues a:hover{padding-left:8px;color:var(--accent)}
+.issues a span{color:var(--muted);font-size:15px;display:block}
+.issues i{font-size:18px}
+.term{border-radius:var(--r-panel);border:1px solid var(--line);background:#0A0D12;padding:28px;font:400 14px/1.9 "Plex Mono",monospace;color:#C9CFDD;overflow-x:auto;white-space:pre}
+.term .c{color:var(--dim)}
+.term .p{color:var(--accent);user-select:none}
+
+footer{border-top:1px solid var(--line);padding:32px 0 48px}
+footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:14px;color:var(--dim)}
+footer nav{display:flex;gap:24px}
+footer a{text-decoration:none;color:var(--muted)}
+footer a:hover{color:var(--text)}
+
+/* Reveal on scroll */
+@media (prefers-reduced-motion:no-preference){
+  .rv{opacity:0;transform:translateY(24px);transition:opacity .8s var(--ease),transform .8s var(--ease);transition-delay:calc(var(--i,0) * 70ms)}
+  .rv.in{opacity:1;transform:none}
+  .hero .rv{transition-duration:1s}
+}
+
+/* Tablet */
+@media (max-width:1023px){
+  .bento{grid-template-columns:repeat(2,1fr)}
+  .c-wait{grid-column:span 2;grid-row:auto}
+  .c-money{grid-column:span 1;grid-row:span 2}
+  .c-digest,.c-ask,.c-learn{grid-column:span 1}
+  .flow{grid-template-columns:repeat(2,1fr);row-gap:48px}
+  .flow::before{display:none}
+}
+/* Phone: everything stacks. */
+@media (max-width:767px){
+  body{font-size:16px}
+  .wrap{padding:0 16px}
+  .nav-links a:not(.gh){display:none}
+  .hero{min-height:0;padding:24px 0 56px}
+  .hero .wrap{grid-template-columns:1fr;gap:8px}
+  .orb-stage{order:-1;max-width:320px;justify-self:center}
+  .hero p{font-size:18px}
+  .rail-sec{padding:24px 0 80px}
+  .rail-btns{display:none}
+  .rail{padding:4px 16px 12px;scroll-padding:0 16px;grid-auto-columns:64vw}
+  .bento{grid-template-columns:1fr}
+  .c-wait,.c-money,.c-digest,.c-ask,.c-learn{grid-column:auto;grid-row:auto}
+  .c-wait{grid-template-columns:1fr;padding:28px 28px 0}
+  .c-wait img{height:300px;border-radius:var(--r-shot) var(--r-shot) 0 0;border-right:1px solid var(--line)}
+  .cell{padding:28px}
+  .c-money{padding:28px 28px 0}
+  .privacy{padding:80px 0}
+  .privacy .wrap,.contrib .wrap{grid-template-columns:1fr;gap:40px}
+  .how{padding:88px 0}
+  .flow{grid-template-columns:1fr;row-gap:36px;padding-left:36px}
+  .flow::before{display:block;top:6px;bottom:6px;left:7px;right:auto;width:1px;height:auto;background:linear-gradient(180deg,var(--accent),var(--line))}
+  .flow li{padding-top:0}
+  .flow li::before{left:-36px;top:6px}
+  .term{font-size:13px;padding:22px}
+  .editions{grid-template-columns:1fr}
+  .ed{padding:28px}
+  .bento-sec,.get,.contrib{padding-bottom:88px}
+  .btn{height:50px;padding:0 20px}
+}
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="brand-dot" aria-hidden="true"></span>Recall</a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#contribute">Contribute</a>
+      <a class="gh" href="https://github.com/Juni-crypto/recall"><i class="ph ph-github-logo" aria-hidden="true"></i>GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <h1 class="rv">Remembers who's waiting on you.</h1>
+        <p class="rv" style="--i:1">Recall reads every notification, tracks who needs a reply and where your money went. The AI never leaves your phone.</p>
+        <div class="ctas rv" style="--i:2">
+          <a class="btn btn-primary" href="#get"><i class="ph ph-download-simple" aria-hidden="true"></i>Download</a>
+          <a class="btn btn-ghost" href="https://github.com/Juni-crypto/recall"><i class="ph ph-code" aria-hidden="true"></i>Source code</a>
+        </div>
+      </div>
+      <div class="orb-stage rv" style="--i:1">
+        <canvas id="orb" role="img" aria-label="The Recall orb. Click to see its moods: calm, waiting, urgent."></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="rail-sec" aria-labelledby="screens-h">
+    <div class="wrap rail-head">
+      <h2 id="screens-h">A look inside.</h2>
+      <div class="rail-btns">
+        <button type="button" data-dir="-1" aria-label="Previous screens"><i class="ph ph-arrow-left"></i></button>
+        <button type="button" data-dir="1" aria-label="Next screens"><i class="ph ph-arrow-right"></i></button>
+      </div>
+    </div>
+    <div class="rail" id="rail" tabindex="0" aria-label="App screenshots">
+      <figure><img class="shot" src="screens/home.png" alt="Home screen with the Recall orb glowing red for one urgent item" loading="lazy" width="540" height="1151"><figcaption><b>Home</b>The orb turns red when something is urgent.</figcaption></figure>
+      <figure><img class="shot" src="screens/today.png" alt="Today screen with an on-device summary, urgent items and money" loading="lazy" width="540" height="1151"><figcaption><b>Today</b>Your day, summarized on the phone.</figcaption></figure>
+      <figure><img class="shot" src="screens/waiting.png" alt="Waiting on you list with Done, Snooze and Not for me actions" loading="lazy" width="540" height="1151"><figcaption><b>Waiting</b>Every open ask, with who and where.</figcaption></figure>
+      <figure><img class="shot" src="screens/money.png" alt="Money screen comparing this month's spending with last month" loading="lazy" width="540" height="1151"><figcaption><b>Spending</b>This month against last, by category.</figcaption></figure>
+      <figure><img class="shot" src="screens/received.png" alt="Received money grouped by who paid" loading="lazy" width="540" height="1151"><figcaption><b>Received</b>Who paid you, and how much.</figcaption></figure>
+      <figure><img class="shot" src="screens/invested.png" alt="Invested view with fixed deposits and mutual funds over time" loading="lazy" width="540" height="1151"><figcaption><b>Invested</b>FDs and SIPs, kept out of spending.</figcaption></figure>
+      <figure><img class="shot" src="screens/money-cats.png" alt="Payment list filtered by spent, received and savings" loading="lazy" width="540" height="1151"><figcaption><b>Payments</b>Every one, straight from your SMS.</figcaption></figure>
+      <figure><img class="shot" src="screens/you.png" alt="What Recall knows: facts it learned, each one removable" loading="lazy" width="540" height="1151"><figcaption><b>What it knows</b>Read it, delete any of it.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="bento-sec" aria-labelledby="does-h">
+    <div class="wrap">
+      <h2 id="does-h" class="rv">What it does</h2>
+      <div class="bento">
+        <article class="cell c-wait rv">
+          <div class="txt">
+            <h3>Nothing slips.</h3>
+            <p>A request stays on your list until you reply or tap Done. "Quick", "urgent" and deadlines move it up.</p>
+            <p class="quote">hey can u approve this pr quick? blocking the release</p>
+          </div>
+          <img src="screens/waiting.png" alt="" loading="lazy">
+        </article>
+        <article class="cell c-digest rv" style="--i:1">
+          <div class="time">9:30 PM</div>
+          <h3>One digest a night</h3>
+          <p>What's urgent, who's waiting, what you spent.</p>
+        </article>
+        <article class="cell c-money rv" style="--i:2">
+          <h3>Money, from your SMS</h3>
+          <p>Bank, UPI and card alerts become spending, received and invested. Moving money between your own accounts isn't spending.</p>
+          <img src="screens/money.png" alt="" loading="lazy">
+        </article>
+        <article class="cell c-ask rv">
+          <i class="ph ph-chat-circle-dots lead" aria-hidden="true"></i>
+          <h3>Ask it</h3>
+          <p class="mono">what did Rahul want yesterday?</p>
+          <p>Answers show which notifications they came from.</p>
+        </article>
+        <article class="cell c-learn rv" style="--i:1">
+          <i class="ph ph-brain lead" aria-hidden="true"></i>
+          <h3>Learns you</h3>
+          <p>How fast you reply to each person, what you ignore, what you mark done. All of it is on one screen.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="privacy" id="privacy" aria-labelledby="priv-h">
+    <div class="wrap">
+      <div class="rv">
+        <h2 id="priv-h">Nothing leaves your phone.</h2>
+        <p class="lede">No server, no account, no analytics. The model runs on the phone's own CPU through llama.cpp.</p>
+      </div>
+      <div class="facts">
+        <div class="fact rv"><i class="ph ph-download-simple" aria-hidden="true"></i><div><h3>One download</h3><p>The model file, from Hugging Face, checked against a pinned SHA-256. You can see every request in the app.</p></div></div>
+        <div class="fact rv" style="--i:1"><i class="ph ph-wifi-slash" aria-hidden="true"></i><div><h3>An offline edition</h3><p>It has no internet permission. Android enforces that, so you don't have to take our word for it.</p></div></div>
+        <div class="fact rv" style="--i:2"><i class="ph ph-thermometer-simple" aria-hidden="true"></i><div><h3>Easy on your phone</h3><p>The model pauses when the phone runs hot or the battery is low. Big jobs wait until it's charging.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how" id="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <h2 id="how-h" class="rv">How it works</h2>
+      <ol class="flow">
+        <li class="rv"><h3>Capture</h3><p>Every notification, plus the SMS and call history you choose to import.</p></li>
+        <li class="rv" style="--i:1"><h3>Understand</h3><p>Rules tag each message instantly. Every 15 minutes, Qwen checks messages from people for anything you owe them.</p></li>
+        <li class="rv" style="--i:2"><h3>Learn</h3><p>Reply habits per person and a small urgency model trained on what you tap.</p></li>
+        <li class="rv" style="--i:3"><h3>Tell you</h3><p>The nightly digest, a home-screen widget and a quiet card on the lock screen.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="get" id="get" aria-labelledby="get-h">
+    <div class="wrap">
+      <h2 id="get-h" class="rv">Get Recall</h2>
+      <p class="sub rv">Android 10 or newer. 8 GB of RAM or more works best.</p>
+      <div class="editions">
+        <div class="ed main rv">
+          <span class="perm"><i class="ph ph-cloud-arrow-down" aria-hidden="true"></i>Internet: model download only</span>
+          <h3>Standard</h3>
+          <p>Pick a model in the app and it downloads over Wi-Fi. Recall suggests one that fits your phone.</p>
+          <a class="btn btn-primary" href="https://github.com/Juni-crypto/recall/releases/latest/download/Recall-standard.apk"><i class="ph ph-android-logo" aria-hidden="true"></i>Standard APK</a>
+        </div>
+        <div class="ed rv" style="--i:1">
+          <span class="perm"><i class="ph ph-wifi-slash" aria-hidden="true"></i>Internet: none</span>
+          <h3>Offline</h3>
+          <p>Download a .gguf model in your browser, then import it. Installs next to Standard.</p>
+          <a class="btn btn-ghost" href="https://github.com/Juni-crypto/recall/releases/latest/download/Recall-offline.apk"><i class="ph ph-android-logo" aria-hidden="true"></i>Offline APK</a>
+        </div>
+      </div>
+      <p class="note">These are preview builds, signed with a debug key. <a href="https://github.com/Juni-crypto/recall/releases">Checksums and older versions</a> are on GitHub.</p>
+    </div>
+  </section>
+
+  <section class="contrib" id="contribute" aria-labelledby="contrib-h">
+    <div class="wrap">
+      <div class="rv">
+        <h2 id="contrib-h">Build it with us</h2>
+        <p>Kotlin, Jetpack Compose and llama.cpp. These are good places to start:</p>
+        <div class="issues">
+          <a href="https://github.com/Juni-crypto/recall/issues/new?template=bank_sms.yml"><div>Your bank's SMS isn't read<span>Send a redacted sample, or fix the parser</span></div><i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
+          <a href="https://github.com/Juni-crypto/recall/blob/main/CONTRIBUTING.md#good-first-issues"><div>Requests in your language<span>Tamil, Hindi and more for the request rules</span></div><i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
+          <a href="https://github.com/Juni-crypto/recall/issues/new?template=bug.yml"><div>Your phone misbehaves<span>OEMs that kill the listener or hide the card</span></div><i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+        <a class="btn btn-ghost" href="https://github.com/Juni-crypto/recall/blob/main/CONTRIBUTING.md"><i class="ph ph-book-open" aria-hidden="true"></i>Contributing guide</a>
+      </div>
+      <pre class="term rv" style="--i:1" aria-label="Build commands"><span class="c"># JDK 17, SDK 37, NDK 27.1, CMake 3.22</span>
+<span class="p">$ </span>git clone --recursive \
+    https://github.com/Juni-crypto/recall
+<span class="p">$ </span>cd recall
+<span class="p">$ </span>./gradlew testOnlineDebugUnitTest
+<span class="p">$ </span>./gradlew installOnlineDebug</pre>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Recall is open source under Apache 2.0.</span>
+    <nav aria-label="Footer">
+      <a href="https://github.com/Juni-crypto/recall">GitHub</a>
+      <a href="https://github.com/Juni-crypto/recall/releases">Releases</a>
+      <a href="https://github.com/Juni-crypto/recall/issues">Issues</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Nav border once the page scrolls (observer, not a scroll listener).
+  var nav = document.getElementById("nav");
+  var sentinel = document.createElement("div");
+  sentinel.style.cssText = "position:absolute;top:0;height:1px;width:1px";
+  document.body.prepend(sentinel);
+  new IntersectionObserver(function(e){ nav.classList.toggle("scrolled", !e[0].isIntersecting); }).observe(sentinel);
+
+  // Reveal sections as they enter.
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if (en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+  }, {rootMargin:"0px 0px -8% 0px"});
+  document.querySelectorAll(".rv").forEach(function(el){ io.observe(el); });
+
+  // Screens rail arrows.
+  var rail = document.getElementById("rail");
+  document.querySelectorAll(".rail-btns button").forEach(function(b){
+    b.addEventListener("click", function(){
+      rail.scrollBy({left: +b.dataset.dir * rail.clientWidth * 0.8, behavior: reduce ? "auto" : "smooth"});
+    });
+  });
+
+  // The orb: the same shader idea as the app (fbm liquid inside a lit sphere).
+  var MOODS = [
+    {a:[0.14,0.10,0.46], b:[0.49,0.42,1.00], c:[0.95,0.72,0.29], e:0.42}, // waiting
+    {a:[0.40,0.06,0.18], b:[1.00,0.37,0.38], c:[1.00,0.77,0.42], e:0.85}, // urgent
+    {a:[0.07,0.20,0.48], b:[0.25,0.76,0.85], c:[0.80,0.93,1.00], e:0.15}  // calm
+  ];
+  var canvas = document.getElementById("orb");
+  var gl = null;
+  try { gl = canvas.getContext("webgl", {premultipliedAlpha:true, alpha:true, antialias:true}); } catch(e){}
+  if (!gl){ canvas.classList.add("orb-fallback"); return; }
+  var VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+  var FS = [
+    "precision highp float;",
+    "uniform vec2 uRes;uniform float uTime;uniform vec3 uA;uniform vec3 uB;uniform vec3 uC;uniform float uE;",
+    "float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}",
+    "float n(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1.,0.)),u.x),mix(h(i+vec2(0.,1.)),h(i+vec2(1.,1.)),u.x),u.y);}",
+    "float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}",
+    "void main(){",
+    " vec2 uv=(gl_FragCoord.xy-.5*uRes)/min(uRes.x,uRes.y);",
+    " float t=uTime*(.10+.42*uE);",
+    " float R=.33*(1.+(.012+.02*uE)*sin(uTime*(.8+2.2*uE)));",
+    " float r=length(uv);",
+    " float inside=smoothstep(R,R-.004,r);",
+    " vec2 p=uv/R; float z=sqrt(max(0.,1.-dot(p,p)));",
+    " vec2 q=p*1.5/(.55+z*.75);",
+    " vec2 w=vec2(fbm(q+vec2(t,-t*.7)),fbm(q+vec2(-t*.8,t*.5)+5.2));",
+    " float m=fbm(q+2.4*w+vec2(t*.3,-t*.2));",
+    " vec3 col=mix(uA,uB,smoothstep(.28,.78,m));",
+    " col=mix(col,uC,smoothstep(.5,.95,w.y*m*1.7)*.85);",
+    " float fres=pow(1.-z,2.2);",
+    " col*=.5+.65*z;",
+    " col+=fres*mix(uB,vec3(1.),.35)*.85;",
+    " vec3 L=normalize(vec3(-.45,.55,.7));",
+    " col+=pow(max(0.,dot(normalize(vec3(p,z)),L)),28.)*.45;",
+    " float d=max(r-R,0.);",
+    " float g=exp(-d*11.)*smoothstep(.49,.36,r)*(1.-inside)*(.5+.3*uE+.08*sin(uTime*(1.1+2.4*uE)));",
+    " vec3 gc=mix(uA,uB,.65);",
+    " gl_FragColor=vec4(col*inside+gc*g*.55,clamp(inside+g*.55,0.,1.));",
+    "}"].join("\n");
+  function sh(type, src){ var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+  var pr = gl.createProgram();
+  gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)){ canvas.classList.add("orb-fallback"); return; }
+  gl.useProgram(pr);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  var U = {}; ["uRes","uTime","uA","uB","uC","uE"].forEach(function(k){ U[k] = gl.getUniformLocation(pr, k); });
+
+  var mood = 0, target = MOODS[0];
+  var cur = {a:target.a.slice(), b:target.b.slice(), c:target.c.slice(), e:target.e};
+  var visible = true, raf = 0, start = performance.now();
+  function lerp(x, y, k){ return x + (y - x) * k; }
+  function frame(now){
+    raf = 0;
+    var k = reduce ? 1 : 0.05;
+    for (var i = 0; i < 3; i++){ cur.a[i] = lerp(cur.a[i], target.a[i], k); cur.b[i] = lerp(cur.b[i], target.b[i], k); cur.c[i] = lerp(cur.c[i], target.c[i], k); }
+    cur.e = lerp(cur.e, target.e, k);
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+    if (w && h && (canvas.width !== w || canvas.height !== h)){ canvas.width = w; canvas.height = h; }
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform2f(U.uRes, canvas.width, canvas.height);
+    gl.uniform1f(U.uTime, reduce ? 12 : (now - start) / 1000 + 12);
+    gl.uniform3fv(U.uA, cur.a); gl.uniform3fv(U.uB, cur.b); gl.uniform3fv(U.uC, cur.c); gl.uniform1f(U.uE, cur.e);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(frame);
+  }
+  function kick(){ if (!raf) raf = requestAnimationFrame(frame); }
+  // Only animate while the orb is on screen.
+  new IntersectionObserver(function(e){ visible = e[0].isIntersecting; if (visible) kick(); }).observe(canvas);
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) kick(); });
+  window.addEventListener("resize", kick);
+  canvas.addEventListener("click", function(){ mood = (mood + 1) % MOODS.length; target = MOODS[mood]; kick(); });
+  kick();
+})();
+</script>
+</body>
+</html>

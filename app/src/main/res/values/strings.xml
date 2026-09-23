@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Recall</string>
+    <string name="widget_description">What needs you right now</string>
+</resources>
