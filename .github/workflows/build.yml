@@ -91,11 +91,3 @@ jobs:
         with:
           name: recall-ipa
           path: ios/build/ipa/Recall.ipa
-
-      # Sideloading tools re-sign the IPA with each user's Apple ID, so it can go straight into releases.
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ios/build/ipa/Recall.ipa
-
